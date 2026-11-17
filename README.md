@@ -3,15 +3,19 @@ AIを活用した一次選考支援システム
 
 ## 開発用データベース
 
-Docker ComposeでPostgreSQL 18.7を起動します。初回起動時に、テーブル設計書に基づく25テーブルを自動作成します。各メンバーのPCに同じ構成のDBを用意するための設定で、保存データ自体はメンバー間で共有されません。
+Docker ComposeでPostgreSQL 18.7を起動します。初回起動時に、2026/11/17改訂のテーブル設計書に基づく26テーブルを自動作成します。企業テーブルと、企業ID・複合外部キー・RLSによる企業別のデータ分離を含みます。各メンバーのPCに同じ構成のDBを用意するための設定で、保存データ自体はメンバー間で共有されません。
 
 ### ファイル構成
 
 ```text
 docker-compose.yml             PostgreSQLの起動・永続化・ヘルスチェック
 .env.example                   個人用設定のひな形
-db/init/001_create_tables.sql   テーブル・制約・索引の作成
-db/tests/schema_smoke.sql      保存と制約の動作確認（初期化時には実行しない）
+db/init/001_create_tables.sql   26テーブル・制約・索引の作成
+db/init/shared/tenant_security.sql  RLS・アプリ権限・企業ID変更禁止（上記から読込）
+db/migrations/001_add_companies.sql 旧25テーブルからの単一企業データ移行
+db/scripts/create_company_admin.sql 企業と初期リーダーの一括登録
+db/tests/schema_smoke.sql      保存・制約・企業分離の動作確認
+db/tests/tenant_isolation.sql  上記テストから読み込む企業分離テスト
 docs/database.md               設計書との対応、アプリ側の検証事項
 ```
 
@@ -53,7 +57,9 @@ docker compose exec db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "\dt
 
 文字コードはUTF8、DBの既定タイムゾーンは`Asia/Tokyo`です。ホストへのポート公開は`127.0.0.1`に限定しています。別のDBが5432番を使用している場合は、`.env`の`POSTGRES_PORT`を`5433`などに変更してください。
 
-今後アプリのコンテナを追加する場合は、`depends_on`の`condition: service_healthy`でDBの起動完了を待つようにします。この構成のDBユーザーは公式イメージが作る管理ユーザーです。本番用の権限設計・公開設定は別途用意します。
+この接続表の`POSTGRES_USER`は、初期化・移行・運営スクリプト用の管理ユーザーです。通常のアプリ接続には使用しません。初期化SQLは、RLSが適用される`NOLOGIN`の権限ロール`salt_app`を作ります。アプリ専用のログインロール作成と、企業IDをトランザクション内に設定する手順は[DB設計の補足](docs/database.md#アプリ用の接続と企業context)を参照してください。
+
+今後アプリのコンテナを追加する場合は、`depends_on`の`condition: service_healthy`でDBの起動完了を待つようにします。
 
 ### 停止と再開
 
@@ -75,7 +81,7 @@ docker compose down --volumes
 docker compose up -d --wait
 ```
 
-残したいデータがある場合は削除せず、変更用のマイグレーションSQLを別途作成・共有してください。初期化SQLは空のDB専用で、既存DBへの再実行は想定していません。
+残したいデータがある場合は削除せず、[旧25テーブルからの移行手順](docs/database.md#旧25テーブルからの移行)を使用してください。用意した移行SQLは、既存データがすべて同一企業に属することを確認した場合専用です。企業が混在しているデータには、所属先の対応表を使う移行が別途必要です。初期化SQLは空のDB専用で、既存DBへの再実行は想定していません。
 
 初期化SQLがエラーになった場合は`docker compose logs db`で原因を確認してください。SQLを直すだけでは途中まで作成されたデータ領域を再初期化できないため、使い捨ての開発DBなら上記の手順で作り直します。
 
@@ -83,14 +89,14 @@ docker compose up -d --wait
 
 ### SQLの動作確認
 
-使い捨ての開発DBで、次のコマンドを実行できます。25テーブルをつないだ保存と18種類の不正データの拒否を確認します。テストデータは最後にロールバックしますが、IDの採番値は進みます。
+使い捨ての開発DBで、管理ユーザーから次のコマンドを実行できます。A社・B社の26テーブルをつないだ保存、従来の18種類の不正データ、企業間の参照・閲覧・更新・削除の拒否、企業停止、接続の企業IDリセットを確認します。テストデータは最後にロールバックしますが、IDの採番値は進みます。
 
 ```sh
-docker compose cp db/tests/schema_smoke.sql db:/tmp/schema_smoke.sql
-docker compose exec db sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f /tmp/schema_smoke.sql'
+docker compose cp db db:/tmp
+docker compose exec db sh -c 'psql -X -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f /tmp/db/tests/schema_smoke.sql'
 ```
 
-`PASS`と`ROLLBACK`が表示されれば成功です。このテストは、[DB設計の補足](docs/database.md)に記載したアプリ側の業務検証を代替するものではありません。
+各検証の`PASS`、`ROLLBACK`、最後の企業IDリセットの`PASS`が表示されれば成功です。このテストは、[DB設計の補足](docs/database.md)に記載した役割・担当募集・ファイル・外部送信などのアプリ側検証を代替するものではありません。
 
 ### GitHubでの管理
 
