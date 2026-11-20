@@ -1,6 +1,77 @@
 # 206-3
 AIを活用した一次選考支援システム
 
+## ローカル開発環境
+
+Django 5.2 LTS は `backend/`、Next.js（TypeScript・App Router・CSS Modules）は `frontend/` にあります。PostgreSQL は既存の Docker Compose で起動します。Windows では Python 3.13、Node.js 24 LTS、Docker Desktop を用意します。以下は PowerShell の例です。
+
+### PostgreSQL
+
+リポジトリ直下で実行します。初回はコピーした `.env` の `POSTGRES_PASSWORD` を自分の開発用パスワードに変更してから DB を起動します。
+
+```powershell
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+```
+
+```powershell
+docker compose up -d --wait
+```
+
+初回のみ、管理接続でアプリ用の `salt_web` を作成します。`-U` と `-d` の値はルートの `.env` の `POSTGRES_USER` と `POSTGRES_DB` に合わせます（下記はひな形の値です）。
+
+```powershell
+docker compose exec db psql -U salt -d salt
+```
+
+```sql
+CREATE ROLE salt_web LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE
+    NOREPLICATION NOBYPASSRLS IN ROLE salt_app;
+\password salt_web
+\q
+```
+
+すでに作成済みの場合は、既存の `salt_web` とパスワードを使用します
+
+### Django
+
+リポジトリ直下から実行します。`python --version` で Python 3.13 を確認してください。Windows の Python ランチャーを使う場合は `python -m venv .venv` を `py -3.13 -m venv .venv` に置き換えられます。
+
+```powershell
+Set-Location backend
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+```
+
+初回は次のコマンドで開発用のキーを生成し、`backend/.env` の `DJANGO_SECRET_KEY` に設定します。`DB_PASSWORD` は `salt_web` のパスワード、`DB_NAME` と `DB_PORT` はルートの `.env` と同じ値に設定します。
+
+```powershell
+.\.venv\Scripts\python.exe -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+```
+
+`backend/.env` で `#` などを含む値は、たとえば `DJANGO_SECRET_KEY='生成した値'` のように引用符で囲めます。
+
+```powershell
+.\.venv\Scripts\python.exe manage.py check
+.\.venv\Scripts\python.exe manage.py runserver
+```
+
+別の端末で `Invoke-RestMethod http://127.0.0.1:8000/api/health/` を実行し、`status` が `ok` なら Django から PostgreSQL に接続できています。初回の `migrate` は既存の `staff` と Django の認証をどう接続するか決めた後、スキーマ変更用の接続で実行します。移行前は開発サーバーに未適用のマイグレーション警告が出ます。[企業分離と実行時の権限](docs/database.md#アプリ用の接続と企業context)も参照してください。
+
+### Next.js
+
+別の PowerShell を開き、リポジトリ直下から実行します。
+
+```powershell
+Set-Location frontend
+npm.cmd ci
+npm.cmd run dev
+```
+
+`http://localhost:3000/` で SALT の初期画面を確認できます。`npm.cmd run lint` と `npm.cmd run build` でコードとビルドを確認できます。
+
+ルートと `backend/` の実際の `.env` は、メンバーごとのローカル設定です。AWS の認証情報は S3・Textract を組み込む段階で設定します。
+
 ## 開発用データベース
 
 Docker ComposeでPostgreSQL 18.7を起動します。初回起動時に、2026/11/17改訂のテーブル設計書に基づく26テーブルを自動作成します。企業テーブルと、企業ID・複合外部キー・RLSによる企業別のデータ分離を含みます。各メンバーのPCに同じ構成のDBを用意するための設定で、保存データ自体はメンバー間で共有されません。

@@ -1,0 +1,6 @@
+.main {
+  max-width: 64rem;
+  margin-inline: auto;
+  padding: 2rem;
+  font-family: system-ui, sans-serif;
+}
