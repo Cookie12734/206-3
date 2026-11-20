@@ -3,7 +3,7 @@ AIを活用した一次選考支援システム
 
 ## ローカル開発環境
 
-Django 5.2 LTS は `backend/`、Next.js（TypeScript・App Router・CSS Modules）は `frontend/` にあります。PostgreSQL は既存の Docker Compose で起動します。Windows では Python 3.13、Node.js 24 LTS、Docker Desktop を用意します。以下は PowerShell の例です。
+Django 5.2 LTS は `backend/`、Next.js（TypeScript・App Router・CSS Modules）は `frontend/` にあります。PostgreSQL は既存の Docker Compose で起動します。Windows では [Python 3.14.10](https://www.python.org/downloads/release/python-31410/#files)、Node.js 24 LTS、Docker Desktop を用意します。以下は PowerShell の例です。
 
 ### PostgreSQL
 
@@ -34,11 +34,14 @@ CREATE ROLE salt_web LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE
 
 ### Django
 
-リポジトリ直下から実行します。`python --version` で Python 3.13 を確認してください。Windows の Python ランチャーを使う場合は `python -m venv .venv` を `py -3.13 -m venv .venv` に置き換えられます。
+リポジトリ直下から実行します。`python --version` で `Python 3.14.10` と表示されることを確認してください。複数のバージョンが入っている場合は、`py -3.14 --version` で同じ表示を確認し、下記の `python -m venv .venv` を `py -3.14 -m venv .venv` に置き換えられます。
+
+既存の `.venv` が Python 3.13 で作られている場合は、Django を停止し、仮想環境を有効化していれば `deactivate` します。`backend/` に移動してから `Rename-Item .venv .venv-python313` で別名に退避し、新しい仮想環境を作ります。退避先がすでにある場合は別名を選びます。
 
 ```powershell
 Set-Location backend
 python -m venv .venv
+.\.venv\Scripts\python.exe --version
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 ```
