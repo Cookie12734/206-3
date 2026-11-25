@@ -67,6 +67,7 @@
 }
 
 .sidebar {
+  --color-scrollbar-thumb: var(--color-sidebar-heading);
   grid-column: 1;
   grid-row: 2;
   position: sticky;

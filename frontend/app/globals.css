@@ -9,6 +9,7 @@
   --color-border: #cfdcd9;
   --color-button-border: #bbcbc8;
   --color-input-border: #adbfbb;
+  --color-scrollbar-thumb: var(--color-sidebar-border);
 
   /* サイドメニュー */
   --color-sidebar: #163e40;
@@ -58,6 +59,30 @@ body {
 }
 
 html { scroll-padding-top: var(--workspace-header-height); }
+
+@media (forced-colors: none) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-scrollbar-thumb) transparent;
+  }
+
+  @supports not (scrollbar-color: auto) {
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      border-radius: var(--radius-control);
+      background: var(--color-scrollbar-thumb);
+    }
+
+    ::-webkit-scrollbar-track,
+    ::-webkit-scrollbar-corner {
+      background: transparent;
+    }
+  }
+}
 
 @media (max-width: 760px) {
   html { scroll-padding-top: 100px; }
