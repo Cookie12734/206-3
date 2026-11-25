@@ -1,0 +1,17 @@
+.columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 24px; align-items: start; }
+.equal { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.score { font-size: 36px; line-height: 1.2; color: var(--color-accent); }
+.scoreRows { padding: 0; margin: 8px 0; list-style: none; display: grid; gap: 16px; }
+.scoreRows li { display: grid; gap: 4px; font-size: 14px; }
+.scoreRows meter { width: 100%; height: 12px; accent-color: var(--color-accent); }
+.paper { padding: 28px; border: 1px solid var(--color-border); display: grid; gap: 20px; background: var(--color-background); }
+.paper h3 { letter-spacing: .2em; text-align: center; }
+.paper section { display: grid; gap: 8px; }
+.paper h4 { margin: 0; padding-bottom: 4px; border-bottom: 1px solid var(--color-border); }
+.highlight { background: var(--color-pending-surface); padding: 12px; }
+.form { display: grid; gap: 16px; }
+.options { display: flex; gap: 16px; flex-wrap: wrap; }
+.options label, .confirm { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.small { font-size: 14px; color: var(--color-text-muted); }
+@media (max-width: 1050px) { .columns { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .paper { padding: 12px; } }

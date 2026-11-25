@@ -1,0 +1,35 @@
+.summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); min-height: 68px; padding: 12px 0; background: var(--color-summary-surface); border: 1px solid var(--color-summary-divider); border-radius: var(--radius-panel); margin: 0; }
+.summary > div { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding-inline: 25px; }
+.summary > div + div { border-inline-start: 1px solid var(--color-summary-divider); }
+.summary dt, .summary dd { margin: 0; }
+.summary dt { font-size: 14px; }
+.summary dd { font-size: 27px; font-weight: 700; }
+.summary > div:last-child dd { color: var(--color-error-count); }
+.tablePanel { padding: 0; gap: 0; overflow: hidden; }
+.filters { display: flex; flex-wrap: wrap; align-items: end; padding: 6px 24px; gap: 12px; border-top: 1px solid var(--color-border); }
+.filters label { width: min(188px, 100%); gap: 4px; font-size: 12px; }
+.filters label:last-child { margin-inline-start: auto; }
+.tabs, .rowCount { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 9px 24px; }
+.tabs nav { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.tabs a[aria-current] { color: var(--color-accent); background: var(--color-accent-surface); }
+.tablePanel table { min-width: 720px; }
+.tablePanel td { height: 73px; }
+.secondaryText { display: block; color: var(--color-text-muted); font-size: 12px; }
+.score { font-size: 21px; font-weight: 700; }
+.score small { margin-inline-start: 4px; color: var(--color-text-muted); font-size: 12px; font-weight: 400; }
+.rowCount { color: var(--color-text-muted); border-top: 1px solid var(--color-border); font-size: 13px; min-height: 48px; }
+.empty { padding: 24px; }
+.note { margin: 0; color: var(--color-text-muted); font-size: 13px; }
+.metadata { color: var(--color-text-muted); font-size: 13px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+@media (max-width: 1050px) {
+  .summary > div { padding-inline: 12px; }
+  .filters label:last-child { margin-inline-start: 0; }
+}
+@media (max-width: 620px) {
+  .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 0; }
+  .summary > div { min-height: 50px; }
+  .summary > div:nth-child(3) { border-inline-start: 0; }
+  .summary > div:nth-child(n + 3) { border-block-start: 1px solid var(--color-summary-divider); }
+  .tabs, .rowCount, .filters { padding-inline: 12px; }
+  .filters label { flex: 1 1 120px; }
+}
