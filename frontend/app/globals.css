@@ -71,7 +71,13 @@ input:is([type="checkbox"], [type="radio"]) { accent-color: var(--color-accent);
 
 a { color: var(--color-accent); }
 
-:focus-visible {
+:focus-visible:not(input, select, textarea) {
   outline: 2px solid var(--color-accent);
   outline-offset: 3px;
+}
+
+:is(input, select, textarea):focus { outline: none; }
+
+label:has(> :is(select, input:is([type="checkbox"], [type="radio"], [type="file"], [readonly])):focus-visible) {
+  font-weight: 700;
 }

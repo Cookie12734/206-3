@@ -6,7 +6,6 @@
 }
 
 .previewBody { white-space: pre-wrap; padding: 16px; background: var(--color-background); }
-.mailText textarea { min-height: 252px; }
 
 @media (max-width: 1080px) {
   .mailColumns { grid-template-columns: 1fr; }
