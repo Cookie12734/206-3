@@ -1,33 +1,23 @@
-type MenuItem = {
-  icon: string;
-  label: string;
-  href?: string;
-};
+const selection = [
+  { icon: "people", label: "候補者一覧", href: "/candidates" },
+  { icon: "job", label: "募集管理", href: "/recruitments" },
+  { icon: "criteria", label: "評価基準", href: "/criteria" },
+];
 
-// 対応する page.tsx を追加したら、その項目に href を指定する。
-export const navigation: { title: string; items: MenuItem[] }[] = [
-  {
-    title: "選考管理",
-    items: [
-      { icon: "people", label: "候補者一覧" },
-      { icon: "job", label: "募集管理" },
-      { icon: "criteria", label: "評価基準" },
-    ],
-  },
-  {
-    title: "説明会",
-    items: [
-      { icon: "survey", label: "アンケート" },
-      { icon: "answers", label: "回答一覧" },
-      { icon: "mail", label: "案内メール設定" },
-    ],
-  },
-  {
-    title: "管理",
-    items: [
-      { icon: "report", label: "帳票出力" },
-      { icon: "account", label: "アカウント" },
-      { icon: "logs", label: "運用・ログ" },
-    ],
-  },
+const events = [
+  { icon: "survey", label: "アンケート", href: "/surveys" },
+  { icon: "answers", label: "回答一覧", href: "/answers" },
+  { icon: "mail", label: "案内メール設定", href: "/mail" },
+];
+
+const admin = [
+  { icon: "report", label: "帳票出力", href: "/reports" },
+  { icon: "account", label: "アカウント", href: "/accounts" },
+  { icon: "logs", label: "運用・ログ", href: "/operations" },
+];
+
+export const navigation = [
+  { title: "選考管理", items: selection },
+  { title: "説明会", items: events },
+  { title: "管理", items: admin },
 ];

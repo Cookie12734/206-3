@@ -1,9 +1,8 @@
 .workspace {
-  --header-height: 66px;
   --sidebar-width: 220px;
   display: grid;
   grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
-  grid-template-rows: var(--header-height) 1fr;
+  grid-template-rows: var(--workspace-header-height) 1fr;
   min-height: 100dvh;
 }
 
@@ -71,12 +70,12 @@
   grid-column: 1;
   grid-row: 2;
   position: sticky;
-  top: var(--header-height);
+  top: var(--workspace-header-height);
   display: flex;
   flex-direction: column;
   gap: 24px;
   align-self: start;
-  height: calc(100dvh - var(--header-height));
+  height: calc(100dvh - var(--workspace-header-height));
   overflow-y: auto;
   padding: 28px 16px 20px;
   background: var(--color-sidebar);
@@ -104,7 +103,7 @@
 .item {
   min-height: 44px;
   padding: 8px 13px;
-  border-radius: 6px;
+  border-radius: var(--radius-control);
   gap: 13px;
   color: inherit;
   font-size: 14px;
@@ -113,7 +112,6 @@
 }
 
 .item svg { flex-shrink: 0; color: var(--color-sidebar-muted); }
-.item[aria-disabled] { color: var(--color-sidebar-muted); cursor: not-allowed; }
 a.item:hover, .item[aria-current] { background: var(--color-sidebar-selected); }
 .item[aria-current] { color: var(--color-surface); font-weight: 700; }
 .item[aria-current] svg { color: var(--color-sidebar-selected-icon); }
@@ -128,7 +126,7 @@ a.item:hover, .item[aria-current] { background: var(--color-sidebar-selected); }
 
 .logout, .toggle {
   min-height: 44px;
-  border-radius: 6px;
+  border-radius: var(--radius-control);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -140,8 +138,7 @@ a.item:hover, .item[aria-current] { background: var(--color-sidebar-selected); }
   color: var(--color-surface);
   background: transparent;
 }
-.logout:enabled:hover { background: var(--color-sidebar-selected); }
-.logout:disabled { color: var(--color-sidebar-muted); cursor: not-allowed; }
+.logout:hover { background: var(--color-sidebar-selected); }
 
 .content {
   grid-column: 2;
@@ -168,7 +165,6 @@ a.item:hover, .item[aria-current] { background: var(--color-sidebar-selected); }
   .workspace {
     display: flex;
     flex-direction: column;
-    --header-height: auto;
   }
   .header {
     flex-wrap: wrap;
@@ -182,6 +178,7 @@ a.item:hover, .item[aria-current] { background: var(--color-sidebar-selected); }
   .context { order: 1; flex-basis: 100%; font-size: 12px; }
   .toggle {
     display: block;
+    min-width: 44px;
     padding-inline: 9px;
     border: 1px solid var(--color-button-border);
     color: var(--color-accent);

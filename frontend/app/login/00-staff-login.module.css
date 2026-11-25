@@ -1,0 +1,13 @@
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  align-items: start;
+  gap: 22px;
+}
+
+.help { display: grid; gap: 16px; }
+.steps { margin: 0; padding-inline-start: 22px; display: grid; gap: 6px; }
+
+@media (max-width: 1000px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+}
