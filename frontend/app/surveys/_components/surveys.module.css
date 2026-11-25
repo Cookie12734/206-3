@@ -1,0 +1,21 @@
+.surveyItem { display: grid; gap: 16px; }
+.surveyItem + .surveyItem { border-top: 1px solid var(--color-border); padding-top: 24px; }
+.surveyItem > span { min-width: 104px; }
+.surveyItem button, .surveyItem a { min-width: 128px; }
+.surveyList { gap: 16px; }
+.editorColumns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start; }
+.form { display: grid; gap: 24px; }
+.twoFields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.questions { min-width: 0; display: grid; align-content: start; gap: 24px; }
+.question { border: 1px solid var(--color-border); border-radius: 8px; padding: 20px; display: grid; gap: 16px; margin: 0; min-width: 0; background: var(--color-surface); }
+.question legend { padding: 0 8px; font-weight: 700; }
+.optionRow { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 8px; }
+.checkbox { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.inlineStatus { align-self: center; color: var(--color-accent); }
+@media (max-width: 1080px) {
+  .editorColumns { grid-template-columns: 1fr; }
+}
+@media (max-width: 550px) {
+  .twoFields { grid-template-columns: 1fr; }
+  .question { padding: 12px; }
+}

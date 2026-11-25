@@ -1,0 +1,13 @@
+.mailColumns {
+  display: grid;
+  grid-template-columns: minmax(0, 652fr) minmax(0, 464fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.previewBody { white-space: pre-wrap; padding: 16px; background: var(--color-background); }
+.mailText textarea { min-height: 252px; }
+
+@media (max-width: 1080px) {
+  .mailColumns { grid-template-columns: 1fr; }
+}
