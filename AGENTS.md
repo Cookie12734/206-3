@@ -24,9 +24,17 @@
 
 たとえばログイン機能を追加する場合、`frontend/app/login/page.tsx` が `/login` の画面を表示し、フォームの送信先としてDjangoに `/api/login/` を追加すると、Djangoが認証を処理します。
 
+## Figma画面番号とファイル名
+
+Figmaに番号が付いている画面を実装するときは、画面本体のファイル名の先頭に、その番号を付けます。番号の先頭のゼロも含めてFigmaの表記に合わせ、`<Figma画面番号>-<画面名>.tsx` の形式にします。画面専用のCSS Modulesを作る場合は、同じ名前で拡張子を `.module.css` にします。
+
+たとえば、Figmaの「01 候補者一覧」を `/candidates` に実装する場合、本体は `frontend/app/candidates/01-candidates.tsx`、専用CSSは `01-candidates.module.css` にします。Next.jsのルート入口は同じフォルダの `page.tsx` に置き、番号付きの画面本体を読み込みます。
+
+画面を追加・変更したら、実装ファイル名の先頭がFigmaの画面番号と一致することを確認します。
+
 ## 共通レイアウトとメニュー
 
-- **画面を追加するとき**は、各 `page.tsx` にその画面の本文を書きます。ヘッダーとサイドメニューは [ルートレイアウト](frontend/app/layout.tsx) が全ページに表示します。
+- **画面を追加するとき**は、各 `page.tsx` から画面本体を表示します。ヘッダーとサイドメニューは [ルートレイアウト](frontend/app/layout.tsx) が全ページに表示します。
 - **共通部分を変更するとき**は、[WorkspaceChrome](frontend/app/_components/workspace-chrome.tsx) と [共通レイアウトのCSS](frontend/app/_components/workspace.module.css) を編集します。ワークスペース名、環境名、利用者の役割はルートレイアウトから渡します。
 - **メニューから画面を開けるようにするとき**は、遷移先の `page.tsx` を追加し、[メニュー定義](frontend/app/_components/workspace-navigation.ts) の該当項目に `href` を設定します。たとえば候補者一覧を `/candidates` に作った場合は `href: "/candidates"` を指定します。準備中の項目は `href` を省略すると無効表示になります。現在地の強調とモバイルメニューの開閉は共通部品が担当します。
 - **ログアウトを実装するとき**は、ルートレイアウトから `WorkspaceChrome` に `logoutAction` を渡します。
