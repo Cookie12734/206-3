@@ -1,0 +1,54 @@
+:root {
+  /* 基本色 */
+  --color-background: #f8faf9;
+  --color-surface: #ffffff;
+  --color-text: #172e34;
+  --color-text-muted: #50656b;
+  --color-accent: #0a655e;
+  --color-accent-surface: #e7f2ef;
+  --color-border: #cfdcd9;
+  --color-button-border: #bbcbc8;
+  --color-input-border: #adbfbb;
+
+  /* サイドメニュー */
+  --color-sidebar: #163e40;
+  --color-sidebar-heading: #bed3cf;
+  --color-sidebar-text: #e3eeec;
+  --color-sidebar-muted: #c4d8d4;
+  --color-sidebar-selected: #2b5b58;
+  --color-sidebar-selected-icon: #a9e7d6;
+  --color-sidebar-border: #537573;
+
+  /* 集計と一覧表 */
+  --color-summary-surface: #eaf2ef;
+  --color-summary-divider: #cedfda;
+  --color-error-count: #a23a30;
+  --color-table-heading: #f0f5f3;
+  --color-table-divider: #dfe7e4;
+
+  /* 選考状況 */
+  --color-pending-surface: #f6edd7;
+  --color-pending-text: #795714;
+  --color-review-text: #895917;
+  --color-error-surface: #f9e8e4;
+  --color-error-text: #993d30;
+  --color-reanalysis-surface: #e3eef3;
+  --color-reanalysis-text: #34596b;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+}
+
+button {
+  font: inherit;
+}
