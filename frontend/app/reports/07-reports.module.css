@@ -1,0 +1,9 @@
+.columns { display: grid; grid-template-columns: minmax(0, 360fr) minmax(0, 756fr); gap: 24px; align-items: start; }
+.option { display: flex; gap: 8px; align-items: center; min-height: 32px; }
+.options { display: grid; }
+.preview { min-height: 560px; }
+.preview [tabindex] { scroll-margin-top: 96px; }
+@media (max-width: 980px) {
+  .columns { grid-template-columns: 1fr; }
+  .preview { min-height: 0; }
+}
