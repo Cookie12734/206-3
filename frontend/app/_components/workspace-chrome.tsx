@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import icons from "./workspace-icons.svg";
 import { navigation } from "./workspace-navigation";
 import styles from "./workspace.module.css";
@@ -26,12 +26,13 @@ function WorkspaceMenus({
   pathname, workspaceLabel, roleLabel, environmentLabel, logoutAction,
 }: WorkspaceProps & { pathname: string }) {
   const [open, setOpen] = useState(false);
+  const menuToggle = useRef<HTMLButtonElement>(null);
 
   return (
     <>
       <header className={styles.header}>
         <a className={styles.skip} href="#workspace-content">本文へ移動</a>
-        <Link href="/" className={styles.brand} onClick={() => setOpen(false)}>
+        <Link href="/candidates" className={styles.brand} onClick={() => setOpen(false)}>
           <span className={styles.mark}><Icon name="brand" size={23} /></span>
           SALT
         </Link>
@@ -40,30 +41,31 @@ function WorkspaceMenus({
           {environmentLabel && <span className={styles.environment}>{environmentLabel}</span>}
           <span className={styles.role}><Icon name="user" />{roleLabel}</span>
         </div>
-        <button type="button" className={styles.toggle} aria-controls="workspace-menu"
+        <button ref={menuToggle} type="button" className={styles.toggle} aria-controls="workspace-menu"
           aria-expanded={open} onClick={() => setOpen(!open)}>
           {open ? "閉じる" : "メニュー"}
         </button>
       </header>
-      <aside id="workspace-menu" className={styles.sidebar} data-open={open}>
+      <aside id="workspace-menu" className={styles.sidebar} data-open={open}
+        onKeyDown={(event) => {
+          if (event.key !== "Escape" || !open) return;
+          setOpen(false);
+          menuToggle.current?.focus();
+        }}>
         <nav aria-label="採用ワークスペース">
           {navigation.map(({ title, items }) => (
             <section className={styles.group} key={title} aria-label={title}>
               <h2>{title}</h2>
               <ul>
                 {items.map(({ label, icon, href }) => {
-                  const current = href && (pathname === href || pathname.startsWith(href + "/"));
-                  const content = <><Icon name={icon} />{label}</>;
+                  const current = pathname === href || pathname.startsWith(href + "/");
                   return (
                     <li key={icon}>
-                      {href ? (
-                        <Link href={href} className={styles.item}
-                          aria-current={current ? (pathname === href ? "page" : "location") : undefined}
-                          onClick={() => setOpen(false)}>{content}</Link>
-                      ) : (
-                        <span className={styles.item} role="link" aria-disabled="true"
-                          title="この画面は準備中です">{content}</span>
-                      )}
+                      <Link href={href} className={styles.item}
+                        aria-current={current ? (pathname === href ? "page" : "location") : undefined}
+                        onClick={() => setOpen(false)}>
+                        <Icon name={icon} />{label}
+                      </Link>
                     </li>
                   );
                 })}
@@ -73,10 +75,9 @@ function WorkspaceMenus({
         </nav>
         <div className={styles.footer}>
           <p>AIは判断材料を提供します。<br />最終判断は採用担当者が行います。</p>
-          <form action={logoutAction}>
-            <button className={styles.logout} type="submit" disabled={!logoutAction}
-              title={logoutAction ? undefined : "ログアウト機能は準備中です"}>ログアウト</button>
-          </form>
+          {logoutAction && <form action={logoutAction}>
+            <button className={styles.logout} type="submit">ログアウト</button>
+          </form>}
         </div>
       </aside>
     </>

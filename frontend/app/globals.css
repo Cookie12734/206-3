@@ -34,6 +34,14 @@
   --color-error-text: #993d30;
   --color-reanalysis-surface: #e3eef3;
   --color-reanalysis-text: #34596b;
+
+  --color-accent-hover: #084f49;
+  --color-disabled-surface: #e2e6e4;
+  --color-disabled-text: #52615a;
+
+  --radius-control: 6px;
+  --radius-panel: 8px;
+  --workspace-header-height: 66px;
 }
 
 *,
@@ -49,6 +57,21 @@ body {
   font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
 }
 
-button {
+html { scroll-padding-top: var(--workspace-header-height); }
+
+@media (max-width: 760px) {
+  html { scroll-padding-top: 100px; }
+}
+
+button, input, select, textarea {
   font: inherit;
+}
+
+input:is([type="checkbox"], [type="radio"]) { accent-color: var(--color-accent); }
+
+a { color: var(--color-accent); }
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
 }

@@ -1,0 +1,5 @@
+.filters { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 16px; }
+.answers { display: grid; gap: 24px; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); align-items: start; }
+.address { display: block; color: var(--color-text-muted); }
+@media (max-width: 1050px) { .answers { grid-template-columns: 1fr; } }
+@media (max-width: 650px) { .filters { grid-template-columns: 1fr; } }
