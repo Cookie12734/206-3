@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import icons from "./workspace-icons.svg";
 import { navigation } from "./workspace-navigation";
 import styles from "./workspace.module.css";
+
+const sidebarScrollKey = "salt:sidebar-scroll-top";
 
 function Icon({ name, size = 18 }: { name: string; size?: number }) {
   return (
@@ -22,11 +24,67 @@ type WorkspaceProps = {
   logoutAction?: () => Promise<void>;
 };
 
-function WorkspaceMenus({
-  pathname, workspaceLabel, roleLabel, environmentLabel, logoutAction,
-}: WorkspaceProps & { pathname: string }) {
+export function WorkspaceChrome({
+  workspaceLabel, roleLabel, environmentLabel, logoutAction,
+}: WorkspaceProps) {
+  const pathname = usePathname();
+  const [menuPathname, setMenuPathname] = useState(pathname);
   const [open, setOpen] = useState(false);
   const menuToggle = useRef<HTMLButtonElement>(null);
+  const sidebar = useRef<HTMLElement>(null);
+  const sidebarFooter = useRef<HTMLDivElement>(null);
+
+  // Close the mobile menu on navigation while keeping the sidebar DOM and scroll position.
+  if (menuPathname !== pathname) {
+    setMenuPathname(pathname);
+    setOpen(false);
+  }
+
+  useLayoutEffect(() => {
+    const element = sidebar.current;
+    if (!element) return;
+
+    let position = element.scrollTop;
+    const restore = () => { element.scrollTop = position; };
+    const restoreFromStorage = () => {
+      try {
+        const saved = window.sessionStorage.getItem(sidebarScrollKey);
+        const top = Number(saved);
+        if (saved !== null && Number.isFinite(top) && top >= 0) position = top;
+      } catch {
+        // The mounted sidebar can still keep its position if storage is unavailable.
+      }
+      restore();
+    };
+    const save = () => {
+      const limit = element.scrollHeight - element.clientHeight;
+      const top = element.scrollTop;
+      // A shorter or hidden menu can clamp scrollTop temporarily.
+      if (!element.clientHeight || limit <= 0 || Math.abs(top - Math.min(position, limit)) < 1) return;
+
+      position = top;
+      try {
+        window.sessionStorage.setItem(sidebarScrollKey, String(position));
+      } catch {
+        // Keep the position in this layout for client-side navigation.
+      }
+    };
+
+    restoreFromStorage();
+    const resize = new ResizeObserver(restore);
+    resize.observe(element);
+    if (sidebarFooter.current) resize.observe(sidebarFooter.current);
+    element.addEventListener("scroll", save, { passive: true });
+    window.addEventListener("pagehide", save);
+    window.addEventListener("pageshow", restoreFromStorage);
+
+    return () => {
+      resize.disconnect();
+      element.removeEventListener("scroll", save);
+      window.removeEventListener("pagehide", save);
+      window.removeEventListener("pageshow", restoreFromStorage);
+    };
+  }, []);
 
   return (
     <>
@@ -46,7 +104,7 @@ function WorkspaceMenus({
           {open ? "閉じる" : "メニュー"}
         </button>
       </header>
-      <aside id="workspace-menu" className={styles.sidebar} data-open={open}
+      <aside ref={sidebar} id="workspace-menu" className={styles.sidebar} data-open={open}
         onKeyDown={(event) => {
           if (event.key !== "Escape" || !open) return;
           setOpen(false);
@@ -73,7 +131,7 @@ function WorkspaceMenus({
             </section>
           ))}
         </nav>
-        <div className={styles.footer}>
+        <div ref={sidebarFooter} className={styles.footer}>
           <p>AIは判断材料を提供します。<br />最終判断は採用担当者が行います。</p>
           {logoutAction && <form action={logoutAction}>
             <button className={styles.logout} type="submit">ログアウト</button>
@@ -82,9 +140,4 @@ function WorkspaceMenus({
       </aside>
     </>
   );
-}
-
-export function WorkspaceChrome(props: WorkspaceProps) {
-  const pathname = usePathname();
-  return <WorkspaceMenus key={pathname} pathname={pathname} {...props} />;
 }

@@ -101,7 +101,11 @@
   font-weight: 400;
 }
 .field input::placeholder { color: var(--color-text-muted); }
-.field textarea { min-height: 104px; resize: vertical; }
+.field textarea {
+  block-size: 288px;
+  overflow-y: auto;
+  resize: none;
+}
 .field input[readonly] { background: var(--color-background); }
 .field input[type="file"] { padding: 8px; }
 .details { display: grid; gap: 16px; margin: 0; }

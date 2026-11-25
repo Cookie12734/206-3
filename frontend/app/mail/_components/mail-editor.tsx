@@ -60,8 +60,8 @@ export function MailEditor({ type, surveyId, scoped = false, useTemplate = false
             else router.push(linked(`/surveys/mail/${type}/template-applied`, survey.id));
           }}>テンプレートを読み込む</Button></Actions>}
           <Field label="件名"><input value={current.subject} required onChange={(event) => setMessage({ ...current, subject: event.target.value })} /></Field>
-          <div className={styles.mailText}><Field label="本文"><textarea value={current.body} required
-            onChange={(event) => setMessage({ ...current, body: event.target.value })} /></Field></div>
+          <Field label="本文"><textarea value={current.body} required
+            onChange={(event) => setMessage({ ...current, body: event.target.value })} /></Field>
           <Notice>{"{{申込期限}}：アンケートに設定した申込終了日時\n{{応募リンク}}：回答された採用区分に対応する専用リンク"}</Notice>
           {error && <Notice tone="error">{error}</Notice>}
           <Actions><Button tone="primary" type="submit">{scoped ? "メール設定を保存" : "テンプレートを保存"}</Button>
