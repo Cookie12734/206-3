@@ -14,7 +14,7 @@
   --color-text: #20352e;
   --color-text-muted: #5e6f67;
   --color-border: #dce4df;
-  --color-input-border: var(--color-border);
+  --color-input-border: #84958b;
   --radius-control: 8px;
   min-height: 100dvh;
   background: var(--color-background);
