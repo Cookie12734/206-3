@@ -65,7 +65,7 @@ export default function Candidates({ filtered = false, original = false, initial
           <option value="desc">スコアの高い順</option><option value="asc">スコアの低い順</option></select></Field>
       </form>
       {filtered && <div className={styles.rowCount}>検索結果：{[keyword, statusLabel].filter(Boolean).join(" / ") || "すべての候補者"}</div>}
-      {rows.length ? <DataTable caption="候補者一覧" headings={["順位", "候補者", "スコア", "必須条件", "主要スキル", "選考状況", "操作"]}
+      {rows.length ? <DataTable caption="候補者一覧" compact={{ title: 1, status: 5, action: 6 }} headings={["順位", "候補者", "スコア", "必須条件", "主要スキル", "選考状況", "操作"]}
         rows={rows.map((candidate, index) => [
           candidate.score === null ? "—" : String(index + 1).padStart(2, "0"),
           <><strong>{candidate.name}</strong><span className={styles.secondaryText}>{candidate.id}</span></>,

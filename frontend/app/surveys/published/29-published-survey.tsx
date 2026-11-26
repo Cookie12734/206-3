@@ -33,7 +33,7 @@ export default function PublishedSurvey({ surveyId }: { surveyId?: string }) {
       </Actions>
       <Details rows={[
         ["申込期間", surveyPeriod(survey)], ["採用区分", "新卒・中途"],
-        ["自動送信", "選考希望のチェックがある回答だけに応募案内を送信"],
+        ["自動送信", "選考を希望した回答者に応募案内を送信"],
       ]} />
     </Panel>
     <Actions>
