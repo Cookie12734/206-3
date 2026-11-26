@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ActionLink, Actions, Badge, Button, Details, Heading, Notice, Panel, Screen } from "../../_components/screen";
 import { canPublish, linked, sampleId, sampleScenarios, surveyLink, surveyPeriod } from "../_lib/survey";
@@ -7,11 +8,12 @@ import { useSurveys } from "../_lib/use-surveys";
 import styles from "./surveys.module.css";
 
 export function SurveyList({ surveyId = sampleId }: { surveyId?: string }) {
-  const { saved, find, save } = useSurveys();
+  const { saved, find, save, remove } = useSurveys();
   const router = useRouter();
-  const surveys = surveyId === sampleId
+  const [status, setStatus] = useState("");
+  const surveys = (surveyId === sampleId
     ? [find(), ...saved.filter(({ id }) => id !== sampleId && !sampleScenarios.includes(id))]
-    : [find(surveyId)];
+    : [find(surveyId)]).filter(survey => !survey.deleted);
 
   return (
     <Screen>
@@ -22,6 +24,8 @@ export function SurveyList({ surveyId = sampleId }: { surveyId?: string }) {
         <ActionLink href="/mail/mid-career">中途の案内メール設定</ActionLink>
       </Actions>
       <Panel title="登録済みのアンケート" className={styles.surveyList}>
+        <span role="status" hidden={!status}>{status}</span>
+        {surveys.length === 0 && <p>表示できるアンケートがありません。</p>}
         {surveys.map((survey) => {
           const ready = canPublish(survey);
           const publishedPath = `/surveys/published?survey=${encodeURIComponent(survey.id)}`;
@@ -49,14 +53,20 @@ export function SurveyList({ surveyId = sampleId }: { surveyId?: string }) {
                     }}>アンケートリンクを発行</Button>}
                 <ActionLink href={linked("/answers", survey.id)}>回答を確認</ActionLink>
                 {survey.published && <ActionLink href={surveyLink(survey.id)}>アンケートを開く</ActionLink>}
+                <Button tone="danger" aria-label={`${survey.name}を削除`} onClick={() => {
+                  if (!window.confirm(`「${survey.name}」を削除しますか？\n回答の受付を終了します。これまでの回答は回答一覧に残ります。`)) return;
+                  remove(survey.id);
+                  setStatus(`「${survey.name}」を削除しました。`);
+                  if (surveyId !== sampleId) router.replace("/surveys");
+                }}>削除</Button>
               </Actions>
             </section>
           );
         })}
       </Panel>
-      <Notice>{surveys.some((survey) => !canPublish(survey))
+      {surveys.length > 0 && <Notice>{surveys.some((survey) => !canPublish(survey))
         ? "未設定があります：このアンケートの案内メールを設定してください。設定が揃うとリンクを発行できます。"
-        : "アンケートでは説明会の感想と選考意思を確認します。応募情報・書類は、案内メールの専用リンクから受け付けます。"}</Notice>
+        : "アンケートでは説明会の感想と選考意思を確認します。応募情報・書類は、案内メールの専用リンクから受け付けます。"}</Notice>}
     </Screen>
   );
 }

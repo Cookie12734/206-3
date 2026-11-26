@@ -1,1 +1,1 @@
-export { default } from "./04-criteria";
+export { default } from "./criteria-management";

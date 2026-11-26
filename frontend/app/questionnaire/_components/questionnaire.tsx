@@ -23,6 +23,11 @@ export function Questionnaire({ type, surveyId = sampleId, interested = true }: 
   const [sending, setSending] = useState(false);
   const current = selection ?? { type, interested };
 
+  if (survey.deleted) return <Screen portal>
+    <Heading title="会社説明会アンケート" />
+    <Notice>このアンケートの回答受付は終了しました。</Notice>
+  </Screen>;
+
   if (!isSample(surveyId) && !survey.published) return <Screen portal>
     <Heading title="会社説明会アンケート" />
     <Notice>このアンケートは公開されていません。デモで作成したアンケートは、発行したブラウザーから開いてください。</Notice>
