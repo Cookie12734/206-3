@@ -11,7 +11,10 @@
   overflow-wrap: anywhere;
 }
 
-.portal { grid-template-columns: minmax(0, 864px); }
+.portal {
+  grid-template-columns: minmax(0, 864px);
+  justify-content: center;
+}
 
 .heading {
   display: flex;
@@ -89,10 +92,10 @@
 
 .field { display: grid; gap: 6px; min-width: 0; font-size: 14px; font-weight: 500; }
 .field :is(input:not([type="checkbox"], [type="radio"]), textarea, select) {
-  min-height: 44px;
+  min-height: var(--field-control-height, 44px);
   width: 100%;
   min-width: 0;
-  padding: 10px 12px;
+  padding: 10px var(--field-padding-inline, 12px);
   color: var(--color-text);
   background: var(--color-surface);
   border: 1px solid var(--color-input-border);
