@@ -32,7 +32,7 @@ export function WorkspaceFrame({ children, logoutAction }: {
   return (
     <div className={styles.workspace}>
       <WorkspaceChrome
-        workspaceLabel={eventWorkspace ? "採用ワークスペース / 説明会・応募管理" : "採用ワークスペース / 2026年度 中途採用"}
+        workspaceLabel={eventWorkspace ? "採用ワークスペース / 説明会・応募管理" : "採用ワークスペース"}
         environmentLabel={eventWorkspace ? "デモ環境" : undefined}
         roleLabel="採用担当者"
         logoutAction={logoutAction}

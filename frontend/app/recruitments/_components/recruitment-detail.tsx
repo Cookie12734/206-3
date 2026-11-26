@@ -24,11 +24,12 @@ export function RecruitmentDetail({ jobId, mode = "detail" }: { jobId: string; m
       <span role={mode === "saved" ? "status" : undefined}>{mode === "saved" ? "担当者の割当を保存しました" : "担当者の割当変更は管理者のみ"}</span>
     </Actions>
     <Panel title={editing ? "担当者を選択（複数可）" : "担当者一覧"}>
-      <DataTable headings={["担当者", "メールアドレス", "権限", "状態"]} rows={staff.map((person) => [
+      <DataTable headings={["担当者", "メールアドレス", "権限", "状態", ...(editing ? [] : ["割当"])]} rows={staff.map((person) => [
         editing ? <label><input type="checkbox" checked={selected.includes(person.id)} disabled={person.status === "停止中" && !selected.includes(person.id)}
           onChange={(event) => setChanges(event.target.checked ? [...selected, person.id] : selected.filter((id) => id !== person.id))} /> {person.name}</label>
-          : <span>{selected.includes(person.id) ? "☑" : "☐"} {person.name}</span>,
+          : person.name,
         person.email, person.role, person.status,
+        ...(editing ? [] : [selected.includes(person.id) ? "割当済み" : "未割当"]),
       ])} />
     </Panel>
     <Panel title="割当とアクセス権限">
