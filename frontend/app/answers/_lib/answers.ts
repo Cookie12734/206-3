@@ -7,6 +7,7 @@ export type Answer = {
   email: string;
   type: RecruitmentType;
   interested: boolean;
+  mailFailed?: boolean;
   submittedAt: string;
   responses: Record<string, string>;
 };

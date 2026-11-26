@@ -1,3 +1,7 @@
 .form { display: grid; gap: 24px; }
-.checkbox { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.interest { margin: 0; padding: 0; border: 0; min-width: 0; }
+.interest legend { padding: 0; font-size: 14px; font-weight: 500; }
+.interest p { font-size: 14px; color: var(--color-text-muted); margin-block: 4px; }
+.interest div, .interest label { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.interest label { min-height: 44px; gap: 6px; }
 .small { margin: 8px 0 0; color: var(--color-text-muted); font-size: 14px; }

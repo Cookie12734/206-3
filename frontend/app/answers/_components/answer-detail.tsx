@@ -28,10 +28,10 @@ export function AnswerDetail({ answerId }: { answerId: string }) {
       </Panel>
       <Panel title="応募案内メール">
         {answer.interested ? <>
-          <Notice>{recruitmentLabels[answer.type]}用の案内メールを自動送信する場合の表示です。</Notice>
+          <Notice tone={answer.mailFailed ? "warning" : "info"}>{answer.mailFailed ? "案内メールを送信できませんでした（表示例）。" : `${recruitmentLabels[answer.type]}用の案内メールを送信しました（表示例）。`}</Notice>
           <Details rows={[["送信先", answer.email], ["申込期限", displayDate(survey.endsAt)], ["件名", message.subject]]} />
           <Actions><ActionLink href={`/mail/${answer.type}`}>使用テンプレートを見る</ActionLink></Actions>
-        </> : <Notice>選考意思にチェックがないため、応募案内は送信していません。</Notice>}
+        </> : <Notice>「希望しない」が選択されたため、応募案内は送信していません。</Notice>}
       </Panel>
     </div>
     <Actions><ActionLink href={linked("/answers", survey.id)}>回答一覧へ戻る</ActionLink></Actions>

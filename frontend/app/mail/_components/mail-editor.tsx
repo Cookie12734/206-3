@@ -80,7 +80,7 @@ export function MailEditor({ type, surveyId, scoped = false, useTemplate = false
           onChange={(event) => setPreviewDate(event.target.value)} /></Field> :
           !scoped && <Actions><ActionLink href={`/mail/${type}/preview-deadline`}>申込期限を選択</ActionLink></Actions>}
         <div className={styles.previewBody}><strong>{preview(current.subject)}</strong><p>{preview(current.body)}</p></div>
-        <Notice>{`送信条件：選考意思にチェックあり\n区分：${label}\n宛先の手動入力は不要です。`}</Notice>
+        <Notice>{`送信条件：「選考を希望する」を選択\n区分：${label}\n宛先の手動入力は不要です。`}</Notice>
         <p>申込期限の値は、アンケートごとの申込期間から設定されます。</p>
       </Panel>
     </div>

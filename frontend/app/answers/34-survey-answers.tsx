@@ -33,7 +33,7 @@ export default function SurveyAnswers({ surveyId = sampleId }: { surveyId?: stri
         rows={answers.map((answer) => [
           <span key="respondent">{answer.name}<small className={styles.address}>{answer.email}</small></span>,
           recruitmentLabels[answer.type].replace("採用", ""), answer.interested ? "希望する" : "希望しない",
-          <Badge key="mail" tone={answer.interested ? "default" : "waiting"}>{answer.interested ? "送信済み（例）" : "未送信（希望なし）"}</Badge>,
+          <Badge key="mail" tone={answer.mailFailed ? "error" : answer.interested ? "default" : "waiting"}>{answer.mailFailed ? "送信失敗（例）" : answer.interested ? "送信済み（例）" : "未送信（希望なし）"}</Badge>,
           answer.submittedAt, <Link key="detail" href={`/answers/${answer.interested ? "detail" : "no-interest"}?answer=${encodeURIComponent(answer.id)}`}>詳細を見る</Link>,
         ])} /> : <p>条件に一致する回答がありません。</p>}
       <p>回答内容は参加者の詳細画面で確認できます。案内メールの送信状況はデモ表示です。</p>
