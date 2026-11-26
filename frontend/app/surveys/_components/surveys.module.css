@@ -13,6 +13,8 @@
 .question legend { padding: 0 8px; font-weight: 700; }
 .optionRow { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 8px; }
 .checkbox { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.fieldError { color: var(--color-error-text); font-size: 14px; }
+.form input[aria-invalid="true"] { border-color: var(--color-error-text); }
 .inlineStatus { align-self: center; color: var(--color-accent); }
 @media (max-width: 1080px) {
   .editorColumns { grid-template-columns: 1fr; }
