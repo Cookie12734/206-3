@@ -1,3 +1,47 @@
-.inputs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-.data table { min-width: 640px; }
-@media (max-width: 850px) { .inputs { grid-template-columns: 1fr; } }
+.toolbar, .actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.toolbar { justify-content: space-between; }
+.person { display: grid; gap: 2px; }
+.person strong { font-size: 15px; }
+.person span { color: var(--color-text-muted); font-size: 13px; }
+.data :is(th, td):last-child { text-align: center; }
+.data :is(th, td):not(:first-child) { white-space: nowrap; }
+.edit { min-width: 64px; }
+
+.dialog {
+  width: min(460px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  margin: auto;
+  padding: 24px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+.dialog::backdrop { background: color-mix(in srgb, var(--color-text) 42%, transparent); }
+.dialog form { display: grid; gap: 20px; }
+.dialog h2 { margin: 0; font-size: 20px; }
+.inputs, .selects { display: grid; gap: 16px; }
+.selects:has(> :nth-child(2)) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.actions { justify-content: flex-end; padding-top: 16px; border-top: 1px solid var(--color-table-divider); }
+.review h3 { margin: 0 0 8px; font-size: 16px; }
+.review dl { margin: 0; }
+.review dl > div { display: grid; grid-template-columns: 7em minmax(0, 1fr); gap: 12px; padding-block: 10px; }
+.review dl > div + div { border-top: 1px solid var(--color-table-divider); }
+.review dt, .before { color: var(--color-text-muted); }
+.review dd { margin: 0; font-weight: 600; }
+.before { font-weight: 400; }
+
+@media (max-width: 600px) {
+  .data :is(td, th) { padding-inline: 4px; }
+  .edit { min-width: 44px; padding-inline: 6px; }
+  .dialog { padding: 16px; }
+  .actions button { min-width: 0; padding-inline: 12px; }
+  .review dl > div { grid-template-columns: 1fr; gap: 2px; }
+}
