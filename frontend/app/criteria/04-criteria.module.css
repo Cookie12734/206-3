@@ -1,3 +1,7 @@
 .form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start; }
 .scoreField { max-width: 104px; }
+.opening { display: grid; gap: 16px; min-width: 0; overflow-wrap: anywhere; }
+.opening + .opening { border-top: 1px solid var(--color-border); padding-top: 24px; }
+.history summary { cursor: pointer; padding-block: 12px; }
+.history section { display: grid; gap: 12px; border-top: 1px solid var(--color-border); padding-block: 16px; }
 @media (max-width: 1050px) { .form { grid-template-columns: 1fr; } }

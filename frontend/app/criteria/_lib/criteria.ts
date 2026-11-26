@@ -12,3 +12,27 @@ export const defaultCriteria = {
   qualification: "基本情報技術者",
   weights,
 };
+
+export type CriteriaValues = typeof defaultCriteria;
+export type CriteriaVersion = {
+  opening: string;
+  number: number;
+  savedAt: string | null;
+  values: CriteriaValues;
+  deleted?: true;
+};
+
+export function activeCriteria(versions: CriteriaVersion[], opening?: string) {
+  const latest = versions.findLast(v => v.opening === opening);
+  return latest?.deleted ? undefined : latest;
+}
+
+export function criteriaPath(page: "edit" | "saved", version: CriteriaVersion) {
+  return `/criteria/${page}?opening=${encodeURIComponent(version.opening)}&version=${version.number}`;
+}
+
+export type CriteriaPageProps = { searchParams: Promise<{ opening?: string; version?: string }> };
+
+export const sampleVersion: CriteriaVersion = {
+  opening: "engineer", number: 2, savedAt: null, values: defaultCriteria,
+};

@@ -60,7 +60,8 @@
 .button:hover, .button[aria-current] { background: var(--color-accent-surface); color: var(--color-accent); }
 .button[data-tone="primary"] { background: var(--color-accent); border-color: var(--color-accent); color: var(--color-surface); }
 .button[data-tone="primary"]:hover { background: var(--color-accent-hover); }
-.button[data-tone="danger"] { color: var(--color-error-text); }
+.button[data-tone="danger"] { color: var(--color-error-text); border-color: var(--color-error-text); }
+.button[data-tone="danger"]:hover:not(:disabled) { background: var(--color-error-surface); }
 .button:disabled { cursor: not-allowed; color: var(--color-disabled-text); background: var(--color-disabled-surface); border-color: var(--color-button-border); }
 .notice {
   background: var(--color-summary-surface);

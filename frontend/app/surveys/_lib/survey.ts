@@ -9,6 +9,7 @@ export type Survey = {
   questions: Question[];
   messages: Partial<Record<RecruitmentType, Message>>;
   published: boolean;
+  deleted?: true;
 };
 
 export const recruitmentLabels: Record<RecruitmentType, string> = { "new-graduate": "新卒採用", "mid-career": "中途採用" };

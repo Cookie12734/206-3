@@ -12,8 +12,8 @@ export default function PublishedSurvey({ surveyId }: { surveyId?: string }) {
   if (!survey.published || !canPublish(survey)) {
     return <Screen>
       <Heading title="アンケートリンクの発行" />
-      <Notice>アンケート管理から案内メールの設定とリンクの発行を行ってください。</Notice>
-      <Actions><ActionLink href={linked("/surveys", survey.id)}>アンケート管理へ</ActionLink></Actions>
+      <Notice>{survey.deleted ? "このアンケートは削除されました。" : "アンケート管理から案内メールの設定とリンクの発行を行ってください。"}</Notice>
+      <Actions><ActionLink href={survey.deleted ? "/surveys" : linked("/surveys", survey.id)}>アンケート管理へ</ActionLink></Actions>
     </Screen>;
   }
   return <Screen>

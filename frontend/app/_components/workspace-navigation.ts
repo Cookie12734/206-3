@@ -1,7 +1,7 @@
 const selection = [
   { icon: "people", label: "候補者一覧", href: "/candidates" },
   { icon: "job", label: "募集管理", href: "/recruitments" },
-  { icon: "criteria", label: "評価基準", href: "/criteria" },
+  { icon: "criteria", label: "評価管理", href: "/criteria" },
 ];
 
 const events = [

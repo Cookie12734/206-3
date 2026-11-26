@@ -79,6 +79,12 @@ export function SurveyEditor({ edit = false, surveyId, state }: { edit?: boolean
   const setQuestions = (questions: Question[]) => setChanges({ ...current, questions });
   const back = edit ? linked("/surveys", survey.id) : "/surveys";
 
+  if (survey.deleted) return <Screen>
+    <Heading title="アンケートを編集する" />
+    <Notice>このアンケートは削除されました。</Notice>
+    <Actions><ActionLink href="/surveys">アンケート管理へ</ActionLink></Actions>
+  </Screen>;
+
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (saving) return;

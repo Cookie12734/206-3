@@ -28,6 +28,12 @@ export function MailEditor({ type, surveyId, scoped = false, useTemplate = false
     .replaceAll("{{申込期限}}", `${deadline}（日本時間）`)
     .replaceAll("{{応募リンク}}", `https://recruit.example.com${applyRoute}`);
 
+  if (scoped && survey.deleted) return <Screen>
+    <Heading title="アンケート別の案内メールを設定する" />
+    <Notice>このアンケートは削除されました。</Notice>
+    <Actions><ActionLink href="/surveys">アンケート管理へ</ActionLink></Actions>
+  </Screen>;
+
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!current.subject.trim() || !current.body.trim()) {
