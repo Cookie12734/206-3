@@ -84,7 +84,7 @@ html { scroll-padding-top: var(--workspace-header-height); }
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 1024px) {
   html { scroll-padding-top: 100px; }
 }
 

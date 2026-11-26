@@ -29,7 +29,7 @@ export default function SurveyAnswers({ surveyId = sampleId }: { surveyId?: stri
         <option value="">すべて</option><option value="yes">希望する</option><option value="no">希望しない</option></select></Field>
     </div>
     <Panel title="回答一覧">
-      {answers.length ? <DataTable headings={["回答者 / メール", "採用区分", "選考意思", "案内メール", "回答日時", "操作"]}
+      {answers.length ? <DataTable caption="回答一覧" compact={{ title: 0, status: 3, action: 5 }} headings={["回答者 / メール", "採用区分", "選考意思", "案内メール", "回答日時", "操作"]}
         rows={answers.map((answer) => [
           <span key="respondent">{answer.name}<small className={styles.address}>{answer.email}</small></span>,
           recruitmentLabels[answer.type].replace("採用", ""), answer.interested ? "希望する" : "希望しない",

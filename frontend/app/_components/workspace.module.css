@@ -216,7 +216,9 @@ a.item:hover, .item[aria-current] { background: var(--color-sidebar-selected); }
     padding: 16px;
   }
   .standaloneBrand { font-size: 20px; }
+}
 
+@media (max-width: 1024px) {
   .workspace {
     display: flex;
     flex-direction: column;

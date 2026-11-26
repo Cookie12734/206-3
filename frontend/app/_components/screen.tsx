@@ -61,13 +61,30 @@ export function Details({ rows }: { rows: [string, ReactNode][] }) {
     <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>;
 }
 
-export function DataTable({ headings, rows, caption }: {
+export function DataTable({ headings, rows, caption, compact }: {
   headings: string[]; rows: ReactNode[][]; caption?: string;
+  compact?: { title: number; status: number; action: number };
 }) {
-  return <div className={styles.tableWrap} tabIndex={0} role="region" aria-label={caption ?? "一覧表"}>
-    <table className={styles.table}>
-      <thead><tr>{headings.map((heading) => <th key={heading} scope="col">{heading}</th>)}</tr></thead>
-      <tbody>{rows.map((row, index) => <tr key={index}>{row.map((cell, i) => <td key={i}>{cell}</td>)}</tr>)}</tbody>
-    </table>
-  </div>;
+  return <>
+    {compact && <ul className={styles.compactList} aria-label={caption}>
+      {rows.map((row, index) => <li key={index}>
+        <div className={styles.compactRow}>
+          <div>{row[compact.title]}</div>
+          <span aria-label={headings[compact.status]}>{row[compact.status]}</span>
+          <div>{row[compact.action]}</div>
+        </div>
+        <details><summary>その他の項目</summary>
+          <Details rows={headings.flatMap((heading, column) =>
+            column === compact.title || column === compact.status || column === compact.action
+              ? [] : [[heading, row[column]] as [string, ReactNode]])} />
+        </details>
+      </li>)}
+    </ul>}
+    <div className={styles.tableWrap} data-has-compact={compact ? true : undefined} tabIndex={0} role="region" aria-label={caption ?? "一覧表"}>
+      <table className={styles.table}>
+        <thead><tr>{headings.map((heading) => <th key={heading} scope="col">{heading}</th>)}</tr></thead>
+        <tbody>{rows.map((row, index) => <tr key={index}>{row.map((cell, i) => <td key={i}>{cell}</td>)}</tr>)}</tbody>
+      </table>
+    </div>
+  </>;
 }
