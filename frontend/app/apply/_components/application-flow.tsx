@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useSyncExternalStore, type FormEvent } from "react";
+import { useCallback, useId, useState, useSyncExternalStore, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { ActionLink, Actions, Button, Details, Field, Heading, Notice, Panel, Screen } from "../../_components/screen";
 import { useDemoValue } from "../../_lib/demo-storage";
@@ -49,21 +49,28 @@ function Upload({ label, file, setFile, optional = false }: {
   label: string; file: DocumentSummary | null; setFile: (file: DocumentSummary | null) => void; optional?: boolean;
 }) {
   const [error, setError] = useState("");
+  const statusId = useId();
   return <div className={styles.upload}>
-    <Field label={label}><input type="file" accept=".pdf,application/pdf" required={!optional && !file}
+    <strong>{label}</strong>
+    <span id={statusId} aria-live="polite">{file ? documentLabel(file) : "未添付"}</span>
+    <Actions><label className={styles.filePicker}>
+      {file ? "差し替える" : "ファイルを選ぶ"}
+      <input type="file" aria-label={label + (file ? "を差し替える" : "を選ぶ")} aria-describedby={statusId}
+        accept=".pdf,application/pdf" required={!optional && !file}
       onChange={(event) => {
         const selected = event.target.files?.[0];
         if (!selected) return;
+        event.target.value = "";
         if (!selected.name.toLowerCase().endsWith(".pdf") || selected.size > 10 * 1024 * 1024 || selected.size === 0) {
-          event.target.value = "";
           setError("10MB以下のPDFファイルを選択してください。");
           return;
         }
         setError("");
         setFile({ name: selected.name, size: selected.size });
-      }} /></Field>
-    <span>{documentLabel(file)}</span>
-    {optional && file && <Actions><Button onClick={() => setFile(null)}>添付を取り消す</Button></Actions>}
+      }} />
+    </label>
+      {optional && file && <Button onClick={() => { setFile(null); setError(""); }}>添付を取り消す</Button>}
+    </Actions>
     {error && <Notice tone="error">{error}</Notice>}
   </div>;
 }
@@ -79,7 +86,10 @@ export function ApplicationFlow({ type, surveyId = sampleId, stage }: Props & { 
   const [decision] = useDemoValue<Decision | null>("candidate-decision", null);
   const [changes, setChanges] = useState<Application>();
   const [error, setError] = useState("");
-  const display = changes ?? draft ?? (editing && saved ? saved.application : { ...sampleApplication(type, stage === "edit/confirm"), email });
+  const initial: Application = editing
+    ? saved?.application ?? sampleApplication(type, stage === "edit/confirm")
+    : { name: "", email, phone: "", resume: null, history: null, consent: false };
+  const display = changes ?? draft ?? initial;
   const submission = saved ?? sampleSubmission(type, stage === "edit/received");
   const next = (path: Stage) => linked(`/apply/${type}/${path}`, surveyId);
   const role = recruitmentLabels[type];
@@ -175,6 +185,12 @@ export function ApplicationFlow({ type, surveyId = sampleId, stage }: Props & { 
       {editing && <p className={styles.footer}>提出書類はPDF形式で、各ファイル10MBまでです。</p>}
     </Screen>;
   }
+
+  if (stage === "confirm" && !draft) return <Screen portal>
+    <Heading title="応募内容を確認する" description={job} />
+    <Notice>応募者情報と提出書類を入力すると、ここで内容を確認できます。</Notice>
+    <Actions><ActionLink tone="primary" href={next("form")}>応募情報の入力へ進む</ActionLink></Actions>
+  </Screen>;
 
   if (stage === "confirm" || stage === "edit/confirm") return <Screen portal>
     {!editing && <Steps active={2} />}
