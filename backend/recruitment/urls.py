@@ -31,4 +31,30 @@ urlpatterns = [
         views.score_items_view,
         name="score_items",
     ),
+    # BE-07: 基準の版管理・出力・再利用
+    path(
+        "openings/<int:opening_id>/criteria-versions/",
+        views.criteria_versions_view,
+        name="criteria_versions",
+    ),
+    path(
+        "openings/<int:opening_id>/criteria-versions/<int:version_no>/",
+        views.criteria_version_detail_view,
+        name="criteria_version_detail",
+    ),
+    path(
+        "openings/<int:opening_id>/criteria-versions/<int:version_no>/export/",
+        views.criteria_version_export_view,
+        name="criteria_version_export",
+    ),
+    path(
+        "openings/<int:opening_id>/criteria-reuse/",
+        views.criteria_reuse_view,
+        name="criteria_reuse",
+    ),
+    path(
+        "openings/<int:opening_id>/criteria-import/",
+        views.criteria_import_view,
+        name="criteria_import",
+    ),
 ]

@@ -8,9 +8,9 @@ SALT / BE-04 募集要項の登録・編集API ― HTTP層 (Django標準のJSON�
 """
 import json
 
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_protect
-from django.views.decorators.http import require_GET, require_http_methods
+from django.views.decorators.http import require_GET, require_POST, require_http_methods
 
 from . import services
 from .models import Staff
@@ -81,7 +81,10 @@ def _handle(request, func, *, status=200):
         result = func(staff)
     except ServiceError as exc:
         return _error(exc)
-    return JsonResponse(result, status=status, json_dumps_params={"ensure_ascii": False})
+    # 結果が list のエンドポイント (一覧・履歴) もあるため safe=False
+    return JsonResponse(
+        result, status=status, safe=False, json_dumps_params={"ensure_ascii": False}
+    )
 
 
 @csrf_protect
@@ -171,6 +174,92 @@ def score_items_view(request, opening_id: int):
         )
     return _handle(
         request, lambda staff: services.get_score_items_for_staff(staff, opening_id)
+    )
+
+
+@require_GET
+def criteria_versions_view(request, opening_id: int):
+    """BE-07: 基準版の一覧 (各版の完全なスナップショット)"""
+    return _handle(
+        request,
+        lambda staff: services.list_criteria_versions_for_staff(staff, opening_id),
+    )
+
+
+@require_GET
+def criteria_version_detail_view(request, opening_id: int, version_no: int):
+    """BE-07: 指定した基準版の詳細スナップショット"""
+    return _handle(
+        request,
+        lambda staff: services.get_criteria_version_for_staff(
+            staff, opening_id, version_no
+        ),
+    )
+
+
+@require_GET
+def criteria_version_export_view(request, opening_id: int, version_no: int):
+    """BE-07: 基準版の出力 (JSONファイルとしてダウンロード、importで再利用可)"""
+    staff = _get_authenticated_staff(request)
+    if staff is None:
+        return JsonResponse(
+            {"error": {"code": "unauthenticated", "message": "ログインが必要です。"}},
+            status=401,
+        )
+    try:
+        data = services.export_criteria_version(staff, opening_id, version_no)
+    except services.ServiceError as exc:
+        return _error(exc)
+    response = HttpResponse(
+        json.dumps(data, ensure_ascii=False, indent=2),
+        content_type="application/json; charset=utf-8",
+    )
+    response["Content-Disposition"] = (
+        f'attachment; filename="criteria_o{opening_id}_v{version_no}.json"'
+    )
+    return response
+
+
+@csrf_protect
+@require_POST
+def criteria_reuse_view(request, opening_id: int):
+    """BE-07: 過去の版を新しい版として複製する (自募集の旧版 / 自社の別募集の版)"""
+    try:
+        body = _parse_body(request)
+    except ServiceError as exc:
+        return _error(exc)
+    source_version_no = body.get("source_version_no")
+    if not isinstance(source_version_no, int):
+        return _error(
+            ServiceError("validation_error", "source_version_no (整数) が必要です。", 400)
+        )
+    return _handle(
+        request,
+        lambda staff: services.reuse_criteria_version(
+            staff,
+            opening_id,
+            body.get("source_opening_id"),
+            source_version_no,
+            body.get("version_label"),
+        ),
+        status=201,
+    )
+
+
+@csrf_protect
+@require_POST
+def criteria_import_view(request, opening_id: int):
+    """BE-07: export した JSON を取り込み、新しい基準版として保存する"""
+    try:
+        body = _parse_body(request)
+    except ServiceError as exc:
+        return _error(exc)
+    return _handle(
+        request,
+        lambda staff: services.import_criteria(
+            staff, opening_id, body, body.get("version_label")
+        ),
+        status=201,
     )
 
 

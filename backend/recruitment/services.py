@@ -745,3 +745,252 @@ def update_score_items(staff: Staff, opening_id: int, data: ScoreItemsInput) -> 
     _copy_items(latest, new_version, RuleItem.ItemType.REQUIRED)
     create_score_items(new_version, cleaned)
     return serialize_score_items(new_version)
+
+
+# ---------------------------------------------------------------------------
+# BE-07 基準の版管理・出力・再利用
+#
+# 根拠:
+#   - タスク BE-07「保存のたびに新しい版を作る。設定の出力・再利用で
+#     内容と意味が一致すること」(機能21・非機能16)
+#   - TEST-09「基準の再利用前後で一致すること」
+#   - テーブル設計書: rule_versions は募集要項・必須条件・配点を同時に版管理
+#
+# 方針:
+#   - 版の「完全な姿」は スナップショット (要項 + 全項目) で表す。
+#     一覧・詳細・出力 (export) はすべて同じスナップショット形式を使う。
+#   - 再利用はコピーであり、コピー後は元版と独立する
+#     (設計補足の雛形コピーの考え方と同じ)。元を直しても写しは変わらない。
+#   - 出力した JSON をそのまま取り込み (import) できるようにし、
+#     出力→取込の往復で内容が一致することをテストで担保する。
+# ---------------------------------------------------------------------------
+
+CRITERIA_FORMAT = "salt-criteria-v1"
+
+
+def serialize_criteria_snapshot(version: RuleVersion) -> dict:
+    """基準版1つの完全な姿 (要項 + 必須条件 + 加点項目)。"""
+    items = RuleItem.objects.filter(
+        company_id=version.company_id, rule_version_id=version.pk
+    ).order_by("sort_order", "id")
+    required = serialize_required_conditions(version)
+    score = serialize_score_items(version)
+    return {
+        "opening_id": version.opening_id,
+        "version_no": version.version_no,
+        "version_label": version.version_label,
+        "requirements": version.requirements,
+        "required_conditions": {
+            field: required.get(field)
+            for _code, _name, field in REQUIRED_CONDITION_FIELDS
+        },
+        "score_items": score["items"],
+        "score_total_points": score["total_points"],
+        "items": [serialize_rule_item(i) for i in items],
+        "saved_by": version.saved_by_id,
+        "saved_at": version.saved_at.isoformat() if version.saved_at else None,
+    }
+
+
+def _get_opening_or_404(company, opening_id: int) -> Opening:
+    opening = Opening.objects.filter(company_id=company.pk, pk=opening_id).first()
+    if opening is None:
+        raise NotFoundError(_("募集が見つかりません。"))
+    return opening
+
+
+def _get_version_or_404(company, opening: Opening, version_no: int) -> RuleVersion:
+    version = RuleVersion.objects.filter(
+        company_id=company.pk, opening_id=opening.pk, version_no=version_no
+    ).first()
+    if version is None:
+        raise NotFoundError(_("指定された基準版が見つかりません。"))
+    return version
+
+
+@transaction.atomic
+def list_criteria_versions_for_staff(staff: Staff, opening_id: int) -> list[dict]:
+    company = verify_company_and_staff(staff)
+    set_tenant_context_in_tx(company.pk)
+    opening = _get_opening_or_404(company, opening_id)
+    assert_can_view_opening(staff, opening)
+    versions = RuleVersion.objects.filter(
+        company_id=company.pk, opening_id=opening.pk
+    ).order_by("-version_no")
+    return [serialize_criteria_snapshot(v) for v in versions]
+
+
+@transaction.atomic
+def get_criteria_version_for_staff(
+    staff: Staff, opening_id: int, version_no: int
+) -> dict:
+    company = verify_company_and_staff(staff)
+    set_tenant_context_in_tx(company.pk)
+    opening = _get_opening_or_404(company, opening_id)
+    assert_can_view_opening(staff, opening)
+    return serialize_criteria_snapshot(_get_version_or_404(company, opening, version_no))
+
+
+@transaction.atomic
+def export_criteria_version(staff: Staff, opening_id: int, version_no: int) -> dict:
+    """出力用データ。format を付け、import でそのまま受け取れる形にする。"""
+    snapshot = get_criteria_version_for_staff(staff, opening_id, version_no)
+    return {"format": CRITERIA_FORMAT, "criteria": snapshot}
+
+
+def _create_version_from_source(
+    company, staff: Staff, target: Opening, source: RuleVersion,
+    version_label: str | None,
+) -> RuleVersion:
+    latest = latest_rule_version(target)
+    version_no = (latest.version_no + 1) if latest else 1
+    new_version = RuleVersion.objects.create(
+        company_id=company.pk,
+        opening_id=target.pk,
+        version_no=version_no,
+        version_label=_validate_version_label(version_label, version_no),
+        requirements=source.requirements,
+        saved_by_id=staff.pk,
+        saved_at=timezone.now(),
+    )
+    _copy_items(source, new_version, RuleItem.ItemType.REQUIRED)
+    _copy_items(source, new_version, RuleItem.ItemType.SCORE)
+    return new_version
+
+
+@transaction.atomic
+def reuse_criteria_version(
+    staff: Staff,
+    target_opening_id: int,
+    source_opening_id: int | None,
+    source_version_no: int,
+    version_label: str | None = None,
+) -> dict:
+    """過去の版 (自募集の旧版、または自社の別募集の版) を新しい版として複製する。
+
+    複製先の募集に対する編集権限と、複製元の募集に対する閲覧権限が必要。
+    他社の募集・版は存在しないものとして扱う (404)。
+    """
+    company = verify_company_and_staff(staff)
+    set_tenant_context_in_tx(company.pk)
+
+    target = (
+        Opening.objects.select_for_update()
+        .filter(company_id=company.pk, pk=target_opening_id)
+        .first()
+    )
+    if target is None:
+        raise NotFoundError(_("募集が見つかりません。"))
+    assert_can_edit_opening(staff, target)
+
+    source_opening = _get_opening_or_404(company, source_opening_id or target_opening_id)
+    assert_can_view_opening(staff, source_opening)
+    source = _get_version_or_404(company, source_opening, source_version_no)
+
+    new_version = _create_version_from_source(
+        company, staff, target, source, version_label
+    )
+    return serialize_criteria_snapshot(new_version)
+
+
+def _validate_import_items(raw_items) -> list[dict]:
+    if not isinstance(raw_items, list) or not raw_items:
+        raise ValidationError(_("取り込む項目 (items) がありません。"))
+    cleaned = []
+    seen = set()
+    score_total = 0
+    has_score = False
+    for i, raw in enumerate(raw_items, start=1):
+        if not isinstance(raw, dict):
+            raise ValidationError(_("%(n)d 件目の項目の形式が不正です。") % {"n": i})
+        code = _require_text(raw.get("item_code"), f"項目コード({i}件目)", 40)
+        if code in seen:
+            raise ValidationError(
+                _("項目コード %(code)s が重複しています。") % {"code": code}
+            )
+        seen.add(code)
+        item_type = raw.get("item_type")
+        if item_type not in (RuleItem.ItemType.REQUIRED, RuleItem.ItemType.SCORE):
+            raise ValidationError(
+                _("%(code)s の項目種別が不正です。") % {"code": code}
+            )
+        max_points = raw.get("max_points")
+        if item_type == RuleItem.ItemType.SCORE:
+            has_score = True
+            if not isinstance(max_points, int) or isinstance(max_points, bool) or not (0 <= max_points <= 100):
+                raise ValidationError(
+                    _("%(code)s の最大配点は0〜100の整数で指定してください。")
+                    % {"code": code}
+                )
+            score_total += max_points
+        else:
+            max_points = None
+        cleaned.append(
+            {
+                "item_code": code,
+                "item_name": _require_text(raw.get("item_name"), f"項目名({code})", 100),
+                "item_type": item_type,
+                "condition_text": _require_text_unlimited(
+                    raw.get("condition_text"), f"条件({code})"
+                ),
+                "max_points": max_points,
+                "sort_order": raw.get("sort_order") if isinstance(raw.get("sort_order"), int) else i,
+            }
+        )
+    if has_score and score_total != 100:
+        raise ValidationError(
+            _("配点の合計は100にしてください（現在 %(total)d 点）。")
+            % {"total": score_total}
+        )
+    return cleaned
+
+
+@transaction.atomic
+def import_criteria(
+    staff: Staff, opening_id: int, payload: dict, version_label: str | None = None
+) -> dict:
+    """export した JSON を取り込み、新しい基準版として保存する。
+
+    出力→取込の往復で、要項と全項目 (コード・名称・種別・条件・配点・並び順)
+    が一致する。取り込む JSON の版番号や保存者は引き継がない。
+    """
+    company = verify_company_and_staff(staff)
+    set_tenant_context_in_tx(company.pk)
+
+    opening = (
+        Opening.objects.select_for_update()
+        .filter(company_id=company.pk, pk=opening_id)
+        .first()
+    )
+    if opening is None:
+        raise NotFoundError(_("募集が見つかりません。"))
+    assert_can_edit_opening(staff, opening)
+
+    if not isinstance(payload, dict):
+        raise ValidationError(_("取り込むデータの形式が不正です。"))
+    fmt = payload.get("format")
+    if fmt is not None and fmt != CRITERIA_FORMAT:
+        raise ValidationError(_("対応していない出力形式です: %(fmt)s") % {"fmt": fmt})
+    criteria = payload.get("criteria", payload)
+    if not isinstance(criteria, dict):
+        raise ValidationError(_("取り込むデータの形式が不正です。"))
+
+    requirements = _validate_requirements(criteria.get("requirements"))
+    cleaned_items = _validate_import_items(criteria.get("items"))
+
+    latest = latest_rule_version(opening)
+    version_no = (latest.version_no + 1) if latest else 1
+    new_version = RuleVersion.objects.create(
+        company_id=company.pk,
+        opening_id=opening.pk,
+        version_no=version_no,
+        version_label=_validate_version_label(version_label, version_no),
+        requirements=requirements,
+        saved_by_id=staff.pk,
+        saved_at=timezone.now(),
+    )
+    for item in cleaned_items:
+        RuleItem.objects.create(
+            company_id=company.pk, rule_version_id=new_version.pk, **item
+        )
+    return serialize_criteria_snapshot(new_version)

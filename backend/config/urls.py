@@ -17,4 +17,5 @@ def health(request):
 
 urlpatterns = [path("api/health/", health),
                 path("api/", include("recruitment.urls")),
+                path("api/", include("candidates.urls")),
                 ]

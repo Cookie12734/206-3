@@ -4,6 +4,8 @@ BE-04 サービス層テスト
 models は managed=False (本番テーブルはSQLが正本) のため、テストDBでは
 テーブルが自動作成されない。setUpClass で存在しないテーブルだけを作成する。
 """
+import json
+
 from django.db import connection
 from django.test import TransactionTestCase
 from django.utils import timezone
@@ -272,3 +274,95 @@ class OpeningRequirementsServiceTests(TransactionTestCase):
         created = services.create_opening_with_requirements(self.admin, self._valid_input())
         with self.assertRaises(services.PermissionDeniedError):
             services.update_score_items(self.viewer, created["id"], self._score_input())
+
+    # --- BE-07 版管理・出力・再利用 -------------------------------------
+
+    def _full_opening(self):
+        """要項→必須条件→配点まで保存した募集 (版が3つできる)"""
+        created = services.create_opening_with_requirements(self.admin, self._valid_input())
+        services.update_required_conditions(
+            self.admin, created["id"], self._conditions()
+        )
+        services.update_score_items(self.admin, created["id"], self._score_input())
+        return created["id"]
+
+    def test_be07_list_and_detail_snapshots(self):
+        oid = self._full_opening()
+        versions = services.list_criteria_versions_for_staff(self.admin, oid)
+        self.assertEqual([v["version_no"] for v in versions], [3, 2, 1])
+        latest = versions[0]
+        self.assertEqual(latest["score_total_points"], 100)
+        self.assertEqual(
+            latest["required_conditions"]["required_qualification"], "普通自動車第一種運転免許"
+        )
+        v2 = services.get_criteria_version_for_staff(self.admin, oid, 2)
+        self.assertEqual(v2["score_items"], [])  # v2 は配点保存前
+        self.assertEqual(len(v2["items"]), 2)  # 必須条件2件のみ
+        with self.assertRaises(services.NotFoundError):
+            services.get_criteria_version_for_staff(self.admin, oid, 99)
+
+    def test_be07_reuse_own_old_version_restores_contents(self):
+        oid = self._full_opening()
+        before = services.get_criteria_version_for_staff(self.admin, oid, 2)
+        reused = services.reuse_criteria_version(self.admin, oid, None, 2)
+        self.assertEqual(reused["version_no"], 4)
+        self.assertEqual(reused["requirements"], before["requirements"])
+        self.assertEqual(
+            [(i["item_code"], i["condition_text"], i["max_points"]) for i in reused["items"]],
+            [(i["item_code"], i["condition_text"], i["max_points"]) for i in before["items"]],
+        )
+        # 再利用後は最新版が v2 と同内容になる
+        latest_conditions = services.get_required_conditions_for_staff(self.admin, oid)
+        self.assertEqual(latest_conditions["version_no"], 4)
+
+    def test_be07_reuse_from_another_opening_same_company(self):
+        src = self._full_opening()
+        dst = services.create_opening_with_requirements(
+            self.admin,
+            services.OpeningInput(
+                code="ENG-002", job_title="別募集", hire_type="career",
+                contact_info="hr@example.com", recruitment_year=2027,
+                requirements="別の要項",
+            ),
+        )
+        reused = services.reuse_criteria_version(
+            self.admin, dst["id"], src, 3
+        )
+        self.assertEqual(reused["version_no"], 2)
+        self.assertEqual(reused["score_total_points"], 100)
+        self.assertEqual(reused["requirements"], "求める人物像・要件の本文")
+
+    def test_be07_export_import_roundtrip_matches(self):
+        src = self._full_opening()
+        exported = services.export_criteria_version(self.admin, src, 3)
+        self.assertEqual(exported["format"], services.CRITERIA_FORMAT)
+        dst = services.create_opening_with_requirements(
+            self.admin,
+            services.OpeningInput(
+                code="ENG-003", job_title="取込先", hire_type="graduate",
+                contact_info="hr@example.com", recruitment_year=2027,
+                requirements="取込前の要項",
+            ),
+        )
+        imported = services.import_criteria(self.admin, dst["id"], exported)
+        original = exported["criteria"]
+        self.assertEqual(imported["requirements"], original["requirements"])
+        self.assertEqual(
+            [(i["item_code"], i["item_name"], i["item_type"], i["condition_text"], i["max_points"], i["sort_order"]) for i in imported["items"]],
+            [(i["item_code"], i["item_name"], i["item_type"], i["condition_text"], i["max_points"], i["sort_order"]) for i in original["items"]],
+        )
+        bad = json.loads(json.dumps(exported))
+        for item in bad["criteria"]["items"]:
+            if item["item_type"] == "score" and item["max_points"]:
+                item["max_points"] -= 1
+                break
+        with self.assertRaises(services.ValidationError):  # 合計99は取込不可
+            services.import_criteria(self.admin, dst["id"], bad)
+
+    def test_be07_viewer_cannot_reuse_or_import(self):
+        oid = self._full_opening()
+        with self.assertRaises(services.PermissionDeniedError):
+            services.reuse_criteria_version(self.viewer, oid, None, 3)
+        exported = services.export_criteria_version(self.admin, oid, 3)
+        with self.assertRaises(services.PermissionDeniedError):
+            services.import_criteria(self.viewer, oid, exported)
