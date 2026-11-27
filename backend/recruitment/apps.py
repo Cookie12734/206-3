@@ -2,5 +2,6 @@ from django.apps import AppConfig
 
 
 class RecruitmentConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'recruitment'
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "recruitment"
+    verbose_name = "募集・募集要項"

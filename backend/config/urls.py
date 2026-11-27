@@ -1,6 +1,6 @@
 from django.db import OperationalError, connection
 from django.http import JsonResponse
-from django.urls import path
+from django.urls import include, path
 from django.views.decorators.http import require_GET
 
 
@@ -15,4 +15,6 @@ def health(request):
     return JsonResponse({"status": "ok"})
 
 
-urlpatterns = [path("api/health/", health)]
+urlpatterns = [path("api/health/", health),
+                path("api/", include("recruitment.urls")),
+                ]
