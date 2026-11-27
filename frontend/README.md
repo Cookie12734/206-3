@@ -2,6 +2,8 @@
 
 `npm.cmd run dev` で起動し、`http://localhost:3000/` を開くと採用担当者ログインのデモに進みます。
 
+応募者は案内メールの専用リンク、または選考希望ありのアンケート回答完了画面の「応募手続きへ進む」から入ります。ローカルで応募者ログインを直接確認する場合は、新卒は `http://localhost:3000/apply/new-graduate/login`、中途は `http://localhost:3000/apply/mid-career/login` を開きます。
+
 ## 画面の配置
 
 各 URL の `page.tsx` から、同じフォルダにある番号付きの画面本体を読み込みます。複数画面で使う部品とデータ型は、機能内の `_components/` と `_lib/` に置きます。共通レイアウト、フォーム、表は `app/_components/` にあります。

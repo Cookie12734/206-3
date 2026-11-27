@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { startTransition, useOptimistic, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { ActionLink, Actions, Button, Details, Field, Heading, Notice, Panel, Screen } from "../../_components/screen";
 import { useDemoValue } from "../../_lib/demo-storage";
@@ -9,7 +9,7 @@ import { displayDate, linked, recruitmentLabels, sampleId, surveyPeriod, type Re
 import { useSurveys } from "../../surveys/_lib/use-surveys";
 import styles from "./questionnaire.module.css";
 
-export function Questionnaire({ type, surveyId = sampleId, interested = true }: {
+export function Questionnaire({ type, surveyId = sampleId, interested }: {
   type: RecruitmentType; surveyId?: string; interested?: boolean;
 }) {
   const { find, isSample } = useSurveys();
@@ -19,9 +19,13 @@ export function Questionnaire({ type, surveyId = sampleId, interested = true }: 
     `survey-response:${surveyId}`, { email: "applicant@example.com", responses: {} },
   );
   const router = useRouter();
-  const [selection, setSelection] = useState<{ type: RecruitmentType; interested: boolean }>();
   const [sending, setSending] = useState(false);
-  const current = selection ?? { type, interested };
+  const [current, showSelection] = useOptimistic({ type, interested });
+
+  if (survey.deleted) return <Screen portal>
+    <Heading title="会社説明会アンケート" />
+    <Notice>このアンケートの回答受付は終了しました。</Notice>
+  </Screen>;
 
   if (!isSample(surveyId) && !survey.published) return <Screen portal>
     <Heading title="会社説明会アンケート" />
@@ -29,16 +33,23 @@ export function Questionnaire({ type, surveyId = sampleId, interested = true }: 
   </Screen>;
 
   function choose(next: typeof current) {
-    setSelection(next);
-    router.push(linked(`/questionnaire/${next.type}${next.interested ? "" : "/no-interest"}`, surveyId));
+    const params = new URLSearchParams();
+    if (surveyId !== sampleId) params.set("survey", surveyId);
+    if (next.interested) params.set("state", "interested");
+    const path = `/questionnaire/${next.type}${next.interested === false ? "/no-interest" : ""}`;
+    startTransition(() => {
+      showSelection(next);
+      router.push(params.size ? `${path}?${params}` : path, { scroll: false });
+    });
   }
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (sending) return;
+    if (sending || current.interested === undefined) return;
     setSending(true);
     const answer: Answer = {
-      id: crypto.randomUUID(), surveyId, name: `参加者 ${answers.length + 1}`, email: draft.email.trim(), ...current,
+      id: crypto.randomUUID(), surveyId, name: `参加者 ${answers.length + 1}`, email: draft.email.trim(),
+      type: current.type, interested: current.interested, mailFailed: current.interested && !survey.messages[current.type],
       submittedAt: new Intl.DateTimeFormat("ja-JP", { dateStyle: "short", timeStyle: "short", timeZone: "Asia/Tokyo" }).format(new Date()),
       responses: draft.responses,
     };
@@ -68,8 +79,14 @@ export function Questionnaire({ type, surveyId = sampleId, interested = true }: 
               </select>
             : <input value={value} required={question.required} onChange={(event) => update(event.target.value)} />}</Field>;
         })}
-        <label className={styles.checkbox}><input type="checkbox" checked={current.interested} onChange={(event) =>
-          choose({ ...current, interested: event.target.checked })} />選考を希望する</label>
+        <fieldset className={styles.interest}>
+          <legend>選考を希望しますか（必須）</legend>
+          <p id="interest-help">希望する方には、回答後に応募案内メールが届きます。</p>
+          <div>{[true, false].map(value => <label key={String(value)}>
+            <input type="radio" name="interest" required checked={current.interested === value} aria-describedby="interest-help"
+              onChange={() => choose({ ...current, interested: value })} />{value ? "希望する" : "希望しない"}
+          </label>)}</div>
+        </fieldset>
         <Notice>{`応募の申込期間：${surveyPeriod(survey)}\n選考を希望しない場合も、アンケートに回答できます。`}</Notice>
       </Panel>
       <Button tone="primary" type="submit" disabled={sending}>アンケートを送信する</Button>
@@ -85,22 +102,16 @@ export function QuestionnaireComplete({ type, surveyId = sampleId }: { type?: Re
   const answer = answers.findLast((item) => item.surveyId === surveyId && (type ? item.type === type && item.interested : !item.interested));
   const email = answer?.email ?? "applicant@example.com";
   const label = type ? recruitmentLabels[type] : "";
+  const failed = answer ? answer.mailFailed === true : Boolean(type && !survey.messages[type]);
   return <Screen portal>
     <Heading title="アンケートの回答を受け付けました" description="会社説明会へのご参加、ありがとうございました。" />
-    {type ? <>
-      <Panel title="応募案内メールをお送りしました（表示例）">
-        <p>選考をご希望のため、{label}の応募案内を自動送信する場合の表示です。</p>
-        <Details rows={[["送信先", email], ["採用区分", label], ["申込期限", `${displayDate(survey.endsAt)}（日本時間）`]]} />
-      </Panel>
-      <Panel title="応募のご案内">
-        <p><strong>【{label}】Webエンジニア 応募のご案内</strong></p>
-        <p>メールに記載された専用リンクから、応募情報と書類を提出してください。</p>
-        <p>{type === "new-graduate" ? "履歴書は必須です。職務経歴書は、職歴がある場合に任意で提出できます。" : "履歴書と職務経歴書を提出してください。"}</p>
-        <Actions><ActionLink href={linked(`/apply/${type}/login`, surveyId)} tone="primary">応募手続きへ進む</ActionLink></Actions>
-      </Panel>
-      <Notice>【送信失敗時の表示例】回答は保存済みです。応募案内メールを送信できませんでした。</Notice>
-    </> : <Panel title="ご回答ありがとうございました">
-      <p>アンケートの回答を保存しました。選考希望のチェックがないため、応募案内メールは送信していません。</p>
+    {type ? <Panel title={failed ? "応募案内メールを送信できませんでした（表示例）" : "応募案内メールをお送りしました（表示例）"}>
+      {failed && <Notice tone="warning">回答は保存済みです。メールを待たずに、下のボタンから応募できます。</Notice>}
+      <Details rows={[["送信先", email], ["採用区分", label], ["申込期限", `${displayDate(survey.endsAt)}（日本時間）`]]} />
+      <p>{type === "new-graduate" ? "履歴書は必須です。職務経歴書は、職歴がある場合に任意で提出できます。" : "履歴書と職務経歴書を提出してください。"}</p>
+      <Actions><ActionLink href={linked(`/apply/${type}/login`, surveyId)} tone="primary">応募手続きへ進む</ActionLink></Actions>
+    </Panel> : <Panel title="ご回答ありがとうございました">
+      <p>アンケートの回答を保存しました。「希望しない」を選択したため、応募案内メールは送信していません。</p>
       <Details rows={[["回答メールアドレス", email], ["選考意思", "選考を希望しない"]]} />
       <Notice>いただいたご意見は、今後の説明会の改善に活用します。</Notice>
     </Panel>}

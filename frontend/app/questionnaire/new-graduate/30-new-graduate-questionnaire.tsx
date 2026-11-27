@@ -3,5 +3,5 @@ import { Questionnaire } from "../_components/questionnaire";
 
 export default async function NewGraduateQuestionnaire({ searchParams }: SurveyPageProps) {
   const query = await readSurveyQuery(searchParams);
-  return <Questionnaire type="new-graduate" surveyId={query.survey} />;
+  return <Questionnaire type="new-graduate" surveyId={query.survey} interested={query.state === "interested" ? true : undefined} />;
 }

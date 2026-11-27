@@ -2,11 +2,55 @@
 .steps li { border-bottom: 2px solid var(--color-border); padding: 0 0 8px; }
 .steps [aria-current] { border-color: var(--color-accent); color: var(--color-accent); font-weight: 700; }
 .form { display: grid; gap: 16px; }
+main.login {
+  grid-template-columns: minmax(0, 840px);
+  padding-top: 48px;
+  --field-control-height: 48px;
+  --field-padding-inline: 16px;
+}
+.login .form {
+  width: 100%;
+  max-width: 640px;
+  justify-self: center;
+  margin-top: 4px;
+}
+.form .loginCard { gap: 24px; border: 0; }
+.loginCard label { gap: 8px; }
+.loginCard h2 { font-size: 24px; }
+.loginHelp { color: var(--color-text-muted); }
+button.loginSubmit { min-height: 48px; }
 .pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
 .upload { display: grid; gap: 8px; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; }
+.filePicker {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  min-height: 44px;
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 14px;
+  cursor: pointer;
+  overflow: hidden;
+}
+.filePicker input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none; }
+.filePicker:hover {
+  background: var(--color-accent-surface);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+.filePicker:has(:focus-visible) { outline: 2px solid currentColor; outline-offset: 2px; }
+@media (prefers-reduced-motion: no-preference) {
+  .filePicker { transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease; }
+}
 .checkbox { display: flex; gap: 8px; align-items: center; min-height: 44px; }
 .footer { color: var(--color-text-muted); font-size: 14px; margin: 0; }
 @media (max-width: 550px) {
+  main.login { padding-top: 24px; }
+  .form .loginCard { gap: 16px; }
+  .loginCard h2 { font-size: 20px; }
   .steps { gap: 6px; font-size: 12px; }
   .pair { grid-template-columns: 1fr; gap: 16px; }
 }

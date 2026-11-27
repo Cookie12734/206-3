@@ -6,6 +6,54 @@
   min-height: 100dvh;
 }
 
+.standalone {
+  --color-background: #f5f7f6;
+  --color-accent: #22634c;
+  --color-accent-surface: #e8f2ec;
+  --color-summary-surface: var(--color-accent-surface);
+  --color-text: #20352e;
+  --color-text-muted: #5e6f67;
+  --color-border: #dce4df;
+  --color-input-border: #84958b;
+  --radius-control: 8px;
+  min-height: 100dvh;
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+.loginHeader, .applicantHeader {
+  background: var(--color-surface);
+}
+
+.loginHeader {
+  width: fit-content;
+  min-height: 128px;
+  padding: 40px;
+}
+
+.applicantHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 4px 16px;
+  min-height: 88px;
+  padding: 24px;
+}
+
+.standaloneBrand {
+  color: var(--color-accent);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.applicantContext {
+  margin-inline-end: max(0px, calc((100vw - 840px) / 2));
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
 .header {
   position: sticky;
   top: 0;
@@ -163,6 +211,14 @@ a.item:hover, .item[aria-current] { background: var(--color-sidebar-selected); }
 .toggle { display: none; }
 
 @media (max-width: 760px) {
+  .loginHeader, .applicantHeader {
+    min-height: 64px;
+    padding: 16px;
+  }
+  .standaloneBrand { font-size: 20px; }
+}
+
+@media (max-width: 1024px) {
   .workspace {
     display: flex;
     flex-direction: column;
